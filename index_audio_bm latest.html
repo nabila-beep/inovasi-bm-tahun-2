@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Feeding Frenzy: Misi Pemakanan Sihat Tahun 2</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
+    * {
+      box-sizing: border-box;
+      user-select: none;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(180deg, #00b4db 0%, #0083b0 100%);
+      font-family: 'Poppins', Arial, sans-serif;
+      overflow: hidden;
+    }
+
+    /* Papan Maklumat Utama */
+    #game-header {
+      position: absolute;
+      top: 15px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255, 255, 255, 0.95);
+      padding: 10px 25px;
+      border-radius: 25px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+      display: flex;
+      gap: 18px;
+      align-items: center;
+      z-index: 10;
+      border: 3px solid #ffb300;
+    }
+
+    .stat-box {
+      font-size: 17px;
+      font-weight: bold;
+      color: #0d47a1;
+    }
+
+    .btn-audio {
+      background: #ff9800;
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 15px;
+      cursor: pointer;
+      font-weight: bold;
+      box-shadow: 0 4px 0 #e65100;
+    }
+    .btn-audio:active { transform: translateY(2px); box-shadow: 0 2px 0 #e65100; }
+
+    button, input, textarea, select { font-family: 'Poppins', Arial, sans-serif; }
+
+    canvas { display: block; }
+
+    /* Paparan Soalan (Modal) */
+    #quiz-modal {
+      display: none;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #ffffff;
+      width: 90%;
+      max-width: 580px;
+      padding: 25px;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      text-align: center;
+      border: 5px solid #29b6f6;
+      z-index: 100;
+    }
+
+    #quiz-modal h2 {
+      color: #0288d1;
+      margin-top: 0;
+      font-size: 22px;
+    }
+
+    .quiz-question {
+      font-size: 19px;
+      font-weight: bold;
+      margin: 15px 0;
+      color: #212121;
+    }
+
+    .options-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 15px;
+    }
+
+    .btn-option {
+      background: #e1f5fe;
+      border: 2px solid #81d4fa;
+      padding: 12px 15px;
+      border-radius: 12px;
+      font-size: 17px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s;
+      color: #0d47a1;
+      text-align: left;
+    }
+
+    .btn-option:hover {
+      background: #b3e5fc;
+      transform: scale(1.02);
+    }
+
+    .drag-label { margin: 8px 0 5px; font-weight: 700; color: #0d47a1; }
+    .completion-stars { display:flex; justify-content:center; gap:8px; font-size:42px; margin:14px 0; animation: starPop .5s ease-out; }
+    .completion-message { font-weight:600; color:#37474f; margin:10px 0; line-height:1.5; }
+    @keyframes starPop { from { transform:scale(.6); opacity:.2; } to { transform:scale(1); opacity:1; } }
+
+    .prompt-box {
+      background: #fff8e1;
+      border: 3px solid #ffb300;
+      border-radius: 14px;
+      padding: 14px 16px;
+      margin: 12px 0 14px;
+      font-size: 19px;
+      line-height: 1.6;
+      font-weight: bold;
+      color: #5d4037;
+      text-align: center;
+      box-shadow: 0 4px 0 rgba(245, 166, 35, 0.25);
+    }
+
+    #feedback-msg {
+      margin-top: 15px;
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .drag-label { margin: 8px 0 5px; font-weight: 700; color: #0d47a1; }
+    .completion-stars { display:flex; justify-content:center; gap:8px; font-size:42px; margin:14px 0; animation: starPop .5s ease-out; }
+    .completion-message { font-weight:600; color:#37474f; margin:10px 0; line-height:1.5; }
+    @keyframes starPop { from { transform:scale(.6); opacity:.2; } to { transform:scale(1); opacity:1; } }
+
+    .prompt-box {
+      background: #fff8e1;
+      border: 3px dashed #ffb300;
+      border-radius: 14px;
+      padding: 12px 14px;
+      margin: 12px 0;
+      font-size: 18px;
+      font-weight: bold;
+      line-height: 1.5;
+    }
+
+    .drag-title {
+      font-size: 16px;
+      font-weight: bold;
+      color: #0d47a1;
+      margin: 12px 0 8px;
+    }
+
+    .word-bank, .sentence-zone {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      min-height: 58px;
+      padding: 10px;
+      border-radius: 14px;
+    }
+
+    .word-bank {
+      background: #e3f2fd;
+      border: 2px solid #90caf9;
+    }
+
+    .sentence-zone {
+      background: #f1f8e9;
+      border: 3px dashed #81c784;
+      margin-top: 8px;
+    }
+
+    .word-tile {
+      background: #ffffff;
+      border: 2px solid #42a5f5;
+      border-radius: 10px;
+      padding: 9px 12px;
+      font-size: 16px;
+      font-weight: bold;
+      color: #0d47a1;
+      cursor: grab;
+      box-shadow: 0 3px 0 #90caf9;
+      touch-action: none;
+    }
+
+    .word-tile:active { cursor: grabbing; transform: scale(0.98); }
+    .word-tile.selected { outline: 3px solid #ff9800; }
+
+    .check-btn, .reset-order-btn {
+      border: none;
+      border-radius: 12px;
+      padding: 10px 15px;
+      margin: 10px 5px 0;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .check-btn { background: #43a047; color: white; box-shadow: 0 4px 0 #2e7d32; }
+    .reset-order-btn { background: #eeeeee; color: #424242; box-shadow: 0 4px 0 #bdbdbd; }
+
+    .answer-input {
+      width: 90%;
+      max-width: 420px;
+      padding: 12px 15px;
+      border: 3px solid #64b5f6;
+      border-radius: 12px;
+      font-size: 20px;
+      text-align: center;
+      font-weight: bold;
+      margin: 10px auto;
+      outline: none;
+    }
+
+    .answer-input:focus { border-color: #ff9800; }
+
+    .level-badge {
+      background: #e91e63;
+      color: white;
+      padding: 4px 10px;
+      border-radius: 10px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+
+<div id="game-header">
+  <div class="stat-box">⭐ Tahap: <span id="level-val" class="level-badge">Tahap 1 (Mudah)</span></div>
+  <div class="stat-box">🐟 Ikan Dimakan: <span id="fish-count">0</span> / <span id="fish-target">3</span></div>
+  <div class="stat-box">🏆 Markah: <span id="score-val">0</span></div>
+  <div class="stat-box">📊 Saiz Ikan: <span id="size-val">Kecil</span></div>
+  <button class="btn-audio" onclick="speakInstruction()">🔊 Dengar Arahan</button>
+  <button class="btn-audio" onclick="stopSpeech()" style="background:#607d8b; box-shadow:0 4px 0 #37474f;">🔇 Henti Suara</button>
+</div>
+
+<canvas id="gameCanvas"></canvas>
+
+<!-- Tetingkap Soalan Bahasa Melayu -->
+<div id="quiz-modal">
+  <h2 id="modal-title">🎯 CABARAN EJAAN & TATABASA!</h2>
+  <div class="quiz-question" id="quiz-text">Soalan sedang dimuatkan...</div>
+  <div class="options-grid" id="options-container"></div>
+  <div id="feedback-msg"></div>
+</div>
+
+<script>
+  const canvas = document.getElementById('gameCanvas');
+  const ctx = canvas.getContext('2d');
+
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  // Bank Soalan Mengikut Tahap Kesukaran
+  // Soalan disediakan lebih awal dan dipilih secara rawak ketika permainan berjalan.
+  const levelQuestions = {
+    1: [
+      {
+        q: "Pilih ejaan yang betul:",
+        options: ["1. Buahan", "2. Buah-buah", "3. Buah-buahan"],
+        correct: 2
+      },
+      {
+        q: "Betulkan ejaan yang salah dalam ayat berikut: “Ali suka makan makanan yang maneh.”",
+        options: ["1. Manis", "2. Minum", "3. Manes"],
+        correct: 0
+      },
+      {
+        q: "Apakah kesalahan ejaan pada ayat berikut, “Kita perlu makan makanan berpandukan piramid makanan.”",
+        options: ["1. Piramid", "2. Berpandukan", "3. Tiada kesalahan ejaan"],
+        correct: 2
+      }
+    ],
+    2: [
+      {
+        q: "Gerakkan petak perkataan dan susun menjadi satu ayat yang betul.",
+        words: ["makanan", "ali", "basi", "telah", "keracunan", "makan", "kerana", "makanan"],
+        answer: ["Ali", "telah", "keracunan", "makanan", "kerana", "makan", "makanan", "basi"]
+      },
+      {
+        q: "Gerakkan petak perkataan dan susun menjadi satu ayat yang betul.",
+        words: ["buah-buahan", "Saffa", "membasuh", "sebelum", "makan", "segar"],
+        answer: ["Sebelum", "makan,", "Saffa", "membasuh", "buah-buahan", "segar"]
+      }
+    ],
+    3: [
+      {
+        q: "Lengkapkan ayat di bawah supaya menjadi ayat yang lengkap.",
+        promptBox: "Ali tidak ______ makan sayur.",
+        accepted: ["suka", "gemar"]
+      },
+      {
+        q: "Lengkapkan ayat di bawah supaya menjadi ayat yang lengkap.",
+        promptBox: "Sayur-______ bagus untuk kesihatan.",
+        accepted: ["sayuran"]
+      },
+      {
+        q: "Lengkapkan ayat di bawah supaya menjadi ayat yang lengkap.",
+        promptBox: "Jangan makan makanan yang telah _____.",
+        accepted: ["basi", "rosak", "busuk"]
+      }
+    ]
+  };
+
+  let currentLevel = 1;
+  let currentQuestionIndex = 0;
+  let eatenCount = 0;
+  let score = 0;
+  let isPaused = false;
+
+  // Tetapan Mengikut Tahap: bilangan ikan kekal 3, hanya kelajuan bom meningkat.
+  const levelSettings = {
+    1: { fishTarget: 3, fishSpeed: 1.5, bombSpeed: 1.0, bombInterval: 5000, bombBurst: 1, label: "Tahap 1 (Aras Rendah)" },
+    2: { fishTarget: 3, fishSpeed: 1.5, bombSpeed: 2.2, bombInterval: 5000, bombBurst: 1, label: "Tahap 2 (Aras Sederhana)" },
+    3: { fishTarget: 3, fishSpeed: 1.5, bombSpeed: 3.4, bombInterval: 5000, bombBurst: 1, label: "Tahap 3 (Aras Tinggi)" }
+  };
+  let fishSpeedBase = levelSettings[1].fishSpeed;
+  let bombSpeedBase = levelSettings[1].bombSpeed;
+  let bombSpawnInterval = levelSettings[1].bombInterval;
+  let bombBurst = levelSettings[1].bombBurst;
+
+
+  // Karakter Ikan Utama (HD Render)
+  const player = {
+    x: canvas.width / 2,
+    y: canvas.height / 2,
+    radius: 35,
+    targetX: canvas.width / 2,
+    targetY: canvas.height / 2
+  };
+
+  // Kawalan Tetikus / Sentuhan Skrin
+  window.addEventListener('mousemove', (e) => {
+    if (!isPaused) {
+      player.targetX = e.clientX;
+      player.targetY = e.clientY;
+    }
+  });
+
+  window.addEventListener('touchmove', (e) => {
+    if (!isPaused && e.touches.length > 0) {
+      player.targetX = e.touches[0].clientX;
+      player.targetY = e.touches[0].clientY;
+    }
+  });
+
+  let smallFishes = [];
+  let bombs = [];
+  let bombTimer = null;
+
+  function spawnSmallFish() {
+    if (isPaused) return;
+    smallFishes.push({
+      x: Math.random() < 0.5 ? -40 : canvas.width + 40,
+      y: Math.random() * (canvas.height - 180) + 90,
+      radius: 15,
+      speed: (Math.random() * 1.5 + fishSpeedBase) * (Math.random() < 0.5 ? 1 : -1),
+      color: `hsl(${Math.random() * 360}, 85%, 60%)`
+    });
+  }
+
+  function spawnBomb() {
+    if (isPaused) return;
+    for (let k = 0; k < bombBurst; k++) {
+      bombs.push({
+        x: Math.random() * (canvas.width - 100) + 50,
+        y: -40 - (k * 55),
+        radius: 22,
+        speed: Math.random() * 1.2 + bombSpeedBase
+      });
+    }
+  }
+
+  setInterval(spawnSmallFish, 1600);
+
+  function resetBombTimer() {
+    if (bombTimer) clearInterval(bombTimer);
+    bombTimer = setInterval(spawnBomb, bombSpawnInterval);
+  }
+  resetBombTimer();
+
+  // Lukis Ikan Utama HD
+  function drawHDPlayer() {
+    ctx.save();
+    ctx.translate(player.x, player.y);
+    if (player.targetX < player.x) ctx.scale(-1, 1);
+
+    const r = player.radius;
+
+    // Ekor HD
+    ctx.beginPath();
+    ctx.moveTo(-r, 0);
+    ctx.quadraticCurveTo(-r * 1.8, -r * 0.8, -r * 1.6, 0);
+    ctx.quadraticCurveTo(-r * 1.8, r * 0.8, -r, 0);
+    ctx.fillStyle = '#ff3d00';
+    ctx.fill();
+
+    // Badan HD
+    let grad = ctx.createRadialGradient(0, 0, r * 0.2, 0, 0, r);
+    grad.addColorStop(0, '#ff9100');
+    grad.addColorStop(1, '#dd2c00');
+
+    ctx.beginPath();
+    ctx.ellipse(0, 0, r * 1.2, r * 0.8, 0, 0, Math.PI * 2);
+    ctx.fillStyle = grad;
+    ctx.fill();
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = '#ffffff';
+    ctx.stroke();
+
+    // Sirip
+    ctx.beginPath();
+    ctx.moveTo(-r * 0.2, -r * 0.7);
+    ctx.quadraticCurveTo(0, -r * 1.2, r * 0.3, -r * 0.6);
+    ctx.fillStyle = '#ff6d00';
+    ctx.fill();
+
+    // Mata HD
+    ctx.beginPath();
+    ctx.arc(r * 0.5, -r * 0.2, r * 0.28, 0, Math.PI * 2);
+    ctx.fillStyle = '#ffffff';
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.arc(r * 0.6, -r * 0.2, r * 0.14, 0, Math.PI * 2);
+    ctx.fillStyle = '#000000';
+    ctx.fill();
+
+    // Kilauan Mata
+    ctx.beginPath();
+    ctx.arc(r * 0.65, -r * 0.25, r * 0.05, 0, Math.PI * 2);
+    ctx.fillStyle = '#ffffff';
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+  // Lukis Makanan Ikan Kecil HD
+  function drawSmallFish(f) {
+    ctx.save();
+    ctx.translate(f.x, f.y);
+    if (f.speed < 0) ctx.scale(-1, 1);
+
+    const r = f.radius;
+    ctx.beginPath();
+    ctx.moveTo(-r, 0);
+    ctx.lineTo(-r * 1.5, -r * 0.5);
+    ctx.lineTo(-r * 1.5, r * 0.5);
+    ctx.closePath();
+    ctx.fillStyle = f.color;
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.ellipse(0, 0, r, r * 0.6, 0, 0, Math.PI * 2);
+    ctx.fillStyle = f.color;
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.arc(r * 0.4, -r * 0.1, r * 0.2, 0, Math.PI * 2);
+    ctx.fillStyle = '#ffffff';
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(r * 0.45, -r * 0.1, r * 0.08, 0, Math.PI * 2);
+    ctx.fillStyle = '#000000';
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+  // Lukis Bom
+  function drawBomb(b) {
+    ctx.beginPath();
+    ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
+    ctx.fillStyle = '#212121';
+    ctx.fill();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = '#f44336';
+    ctx.stroke();
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '700 12px Poppins, Arial, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText("💣", b.x, b.y + 4);
+  }
+
+  function update() {
+    if (isPaused) return;
+
+    // Pergerakan Ikan Utama
+    player.x += (player.targetX - player.x) * 0.1;
+    player.y += (player.targetY - player.y) * 0.1;
+
+    // Kemaskini Ikan Kecil
+    for (let i = smallFishes.length - 1; i >= 0; i--) {
+      let f = smallFishes[i];
+      f.x += f.speed;
+
+      let dist = Math.hypot(player.x - f.x, player.y - f.y);
+      if (dist < player.radius + f.radius) {
+        smallFishes.splice(i, 1);
+        eatenCount++;
+        document.getElementById('fish-count').innerText = eatenCount;
+        speakText("Bagus!");
+
+        // Jika makan 3 ikan kecil -> Buka Soalan
+        if (eatenCount >= levelSettings[currentLevel].fishTarget) {
+          triggerQuiz();
+        }
+        continue;
+      }
+
+      if (f.x < -60 || f.x > canvas.width + 60) smallFishes.splice(i, 1);
+    }
+
+    // Kemaskini Bom
+    for (let j = bombs.length - 1; j >= 0; j--) {
+      let b = bombs[j];
+      b.y += b.speed;
+
+      let dist = Math.hypot(player.x - b.x, player.y - b.y);
+      if (dist < player.radius + b.radius) {
+        bombs.splice(j, 1);
+        // Terkena bom: Ikan mengecil & potong markah
+        eatenCount = 0;
+        score = Math.max(0, score - 1);
+        player.radius = 35;
+        document.getElementById('fish-count').innerText = 0;
+        document.getElementById('score-val').innerText = score;
+        document.getElementById('size-val').innerText = "Kecil 🐠";
+        speakText("Awas! Terkena bom. Ikan menjadi kecil semula!");
+        continue;
+      }
+
+      if (b.y > canvas.height + 50) bombs.splice(j, 1);
+    }
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    smallFishes.forEach(drawSmallFish);
+    bombs.forEach(drawBomb);
+    drawHDPlayer();
+  }
+
+  function gameLoop() {
+    update();
+    draw();
+    requestAnimationFrame(gameLoop);
+  }
+
+  // Paparkan Soalan Bahasa Melayu
+  function triggerQuiz() {
+    isPaused = true;
+    stopSpeech(); // Hentikan terus suara arahan sebelum soalan dibuka.
+    const modal = document.getElementById('quiz-modal');
+
+    const questions = levelQuestions[currentLevel];
+    const quizData = questions[currentQuestionIndex];
+    window.currentQuizData = quizData;
+
+    document.getElementById('modal-title').innerText = `🎯 TAHAP ${currentLevel}!`;
+    document.getElementById('quiz-text').innerText = quizData.q;
+    const optionsContainer = document.getElementById('options-container');
+    optionsContainer.innerHTML = '';
+    document.getElementById('feedback-msg').innerText = '';
+
+    if (currentLevel === 1) {
+      quizData.options.forEach((opt, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'btn-option';
+        btn.innerText = opt;
+        btn.onclick = () => checkLevel1Answer(idx, quizData.correct);
+        optionsContainer.appendChild(btn);
+      });
+    } else if (currentLevel === 2) {
+      renderWordOrdering(quizData, optionsContainer);
+    } else {
+      const box = document.createElement('div');
+      box.className = 'prompt-box';
+      box.innerText = quizData.promptBox;
+      optionsContainer.appendChild(box);
+
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'answer-input';
+      input.id = 'level3-answer';
+      input.placeholder = 'Taip jawapan kamu di sini';
+      input.autocomplete = 'off';
+      input.onfocus = stopSpeech;
+      input.oninput = stopSpeech;
+      optionsContainer.appendChild(input);
+
+      const checkBtn = document.createElement('button');
+      checkBtn.className = 'check-btn';
+      checkBtn.innerText = '✅ Semak Jawapan';
+      checkBtn.onclick = () => checkLevel3Answer(quizData.accepted);
+      optionsContainer.appendChild(checkBtn);
+
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') checkLevel3Answer(quizData.accepted);
+      });
+    }
+
+    modal.style.display = 'block';
+    speakText("Soalan Tahap " + currentLevel + ". " + quizData.q);
+  }
+
+  function renderWordOrdering(quizData, container) {
+    const title = document.createElement('div');
+    title.className = 'drag-title';
+    title.innerText = '🧩 Seret petak perkataan ke ruang jawapan dan susun mengikut urutan ayat yang betul.';
+    container.appendChild(title);
+
+    const bank = document.createElement('div');
+    bank.className = 'word-bank';
+    bank.id = 'word-bank';
+
+    const zone = document.createElement('div');
+    zone.className = 'sentence-zone';
+    zone.id = 'sentence-zone';
+
+    const shuffled = [...quizData.words].sort(() => Math.random() - 0.5);
+    shuffled.forEach((word, index) => bank.appendChild(createWordTile(word, index)));
+
+    const bankLabel = document.createElement('div');
+    bankLabel.className = 'drag-label';
+    bankLabel.innerText = 'Perkataan:';
+    const zoneLabel = document.createElement('div');
+    zoneLabel.className = 'drag-label';
+    zoneLabel.innerText = 'Bina ayat:';
+
+    container.appendChild(bankLabel);
+    container.appendChild(bank);
+    container.appendChild(zoneLabel);
+    container.appendChild(zone);
+
+    // Seretan desktop: boleh lepaskan pada ruang jawapan ATAU di antara petak perkataan.
+    [bank, zone].forEach(el => {
+      el.addEventListener('dragover', (e) => e.preventDefault());
+      el.addEventListener('drop', (e) => {
+        e.preventDefault();
+        const id = e.dataTransfer.getData('text/plain');
+        const tile = document.getElementById(id);
+        if (!tile) return;
+        if (e.target.classList.contains('word-tile') && e.target !== tile) {
+          e.target.parentElement.insertBefore(tile, e.target);
+        } else {
+          el.appendChild(tile);
+        }
+        stopSpeech();
+      });
+    });
+
+    const checkBtn = document.createElement('button');
+    checkBtn.className = 'check-btn';
+    checkBtn.innerText = '✅ Semak Susunan';
+    checkBtn.onclick = checkWordOrder;
+
+    const resetBtn = document.createElement('button');
+    resetBtn.className = 'reset-order-btn';
+    resetBtn.innerText = '↩️ Susun Semula';
+    resetBtn.onclick = () => {
+      stopSpeech();
+      [...document.querySelectorAll('#sentence-zone .word-tile')].forEach(tile => bank.appendChild(tile));
+    };
+
+    container.appendChild(checkBtn);
+    container.appendChild(resetBtn);
+  }
+
+  function createWordTile(word, index) {
+    const tile = document.createElement('div');
+    tile.className = 'word-tile';
+    tile.draggable = true;
+    tile.id = `word-tile-${Date.now()}-${index}`;
+    tile.innerText = word;
+
+    tile.addEventListener('dragstart', (e) => {
+      stopSpeech();
+      tile.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', tile.id);
+    });
+    tile.addEventListener('dragend', () => tile.classList.remove('dragging'));
+
+    // Sokongan klik/tap: pindahkan petak antara bank dan ruang ayat.
+    tile.addEventListener('click', () => {
+      stopSpeech();
+      const zone = document.getElementById('sentence-zone');
+      const bank = document.getElementById('word-bank');
+      if (!zone || !bank) return;
+      if (tile.parentElement.id === 'word-bank') zone.appendChild(tile);
+      else bank.appendChild(tile);
+    });
+    return tile;
+  }
+
+  function checkWordOrder() {
+    stopSpeech();
+    const feedback = document.getElementById('feedback-msg');
+    const tiles = [...document.querySelectorAll('#sentence-zone .word-tile')];
+    const answer = tiles.map(t => t.innerText.trim());
+    const expected = window.currentQuizData.answer;
+    const normalize = (word) => word.toLowerCase().replace(/[.,!?;:]/g, '').trim();
+    const correct = answer.length === expected.length && answer.every((word, i) => normalize(word) === normalize(expected[i]));
+
+    if (correct) {
+      handleCorrectAnswer();
+    } else {
+      feedback.style.color = '#c62828';
+      feedback.innerText = '❌ Susunan belum betul. Cuba susun semula petak perkataan.';
+      speakText('Cuba lagi. Susun petak perkataan mengikut ayat yang betul.');
+    }
+  }
+
+  function checkLevel1Answer(selected, correct) {
+    stopSpeech();
+    if (selected === correct) {
+      handleCorrectAnswer();
+    } else {
+      const feedback = document.getElementById('feedback-msg');
+      feedback.style.color = '#c62828';
+      feedback.innerText = '❌ Jawapan kurang tepat. Cuba lagi.';
+      speakText('Jawapan kurang tepat. Cuba lagi.');
+    }
+  }
+
+  function checkLevel3Answer(accepted) {
+    stopSpeech();
+    const input = document.getElementById('level3-answer');
+    const feedback = document.getElementById('feedback-msg');
+    if (!input) return;
+    const answer = input.value.trim().toLowerCase().replace(/[.,!?]/g, '');
+    const correct = accepted.some(item => item.toLowerCase() === answer);
+
+    if (correct) {
+      handleCorrectAnswer();
+    } else {
+      feedback.style.color = '#c62828';
+      feedback.innerText = '❌ Jawapan belum tepat. Cuba semak semula perkataan yang sesuai.';
+      speakText('Cuba lagi. Fikirkan perkataan yang paling sesuai untuk melengkapkan ayat.');
+      input.focus();
+    }
+  }
+
+  function handleCorrectAnswer() {
+    const feedback = document.getElementById('feedback-msg');
+    feedback.style.color = '#2e7d32';
+    feedback.innerText = '🎉 Syabas! Jawapan kamu BETUL!';
+    score += 5;
+    document.getElementById('score-val').innerText = score;
+
+    player.radius += 8;
+    if (player.radius > 65) {
+      document.getElementById('size-val').innerText = 'Raksasa 🐋';
+    } else {
+      document.getElementById('size-val').innerText = 'Sederhana 🐟';
+    }
+
+    stopSpeech();
+    speakText('Tahniah! Jawapan betul!');
+
+    setTimeout(() => {
+      stopSpeech();
+      currentQuestionIndex++;
+
+      // Setiap tahap mempunyai tepat 3 soalan. Murid mesti habiskan ketiga-tiganya.
+      if (currentQuestionIndex < levelQuestions[currentLevel].length) {
+        closeQuiz();
+        eatenCount = 0;
+        document.getElementById('fish-count').innerText = 0;
+        return;
+      }
+
+      if (currentLevel < 3) {
+        currentLevel++;
+        currentQuestionIndex = 0;
+        applyLevelSettings(currentLevel);
+        closeQuiz();
+        eatenCount = 0;
+        document.getElementById('fish-count').innerText = 0;
+      } else {
+        showCompletionScreen();
+      }
+    }, 1200);
+  }
+
+  function applyLevelSettings(level) {
+    stopSpeech();
+    const settings = levelSettings[level];
+    fishSpeedBase = settings.fishSpeed;
+    bombSpeedBase = settings.bombSpeed;
+    bombSpawnInterval = settings.bombInterval;
+    bombBurst = settings.bombBurst;
+    document.getElementById('level-val').innerText = settings.label;
+    document.getElementById('fish-target').innerText = settings.fishTarget;
+    resetBombTimer();
+  }
+
+  function showCompletionScreen() {
+    stopSpeech();
+    isPaused = true;
+    const modal = document.getElementById('quiz-modal');
+    document.getElementById('modal-title').innerText = '🎉 TAHNIAH!';
+    document.getElementById('quiz-text').innerText = 'Berjaya menyelesaikan permainan minda ejaan!';
+    document.getElementById('options-container').innerHTML = `
+      <div class="completion-stars" aria-label="Lima bintang">
+        <span>⭐</span><span>⭐</span><span>⭐</span><span>⭐</span><span>⭐</span>
+      </div>
+      <div class="completion-message">🏆 Semua soalan Tahap 1, Tahap 2 dan Tahap 3 telah diselesaikan!</div>
+    `;
+    document.getElementById('feedback-msg').innerText = 'Hebat! Kamu ialah Juara Minda Ejaan!';
+    document.getElementById('feedback-msg').style.color = '#2e7d32';
+    modal.style.display = 'block';
+    speakText('Tahniah! Kamu berjaya menyelesaikan permainan minda ejaan!');
+  }
+
+  function closeQuiz() {
+    stopSpeech();
+    document.getElementById('quiz-modal').style.display = 'none';
+    eatenCount = 0;
+    document.getElementById('fish-count').innerText = 0;
+    isPaused = false;
+  }
+
+  let malayVoice = null;
+
+  function loadMalayVoice() {
+    if (!('speechSynthesis' in window)) return;
+    const voices = window.speechSynthesis.getVoices();
+    malayVoice = voices.find(v => v.lang && v.lang.toLowerCase() === 'ms-my') ||
+                 voices.find(v => v.lang && v.lang.toLowerCase().startsWith('ms')) ||
+                 voices.find(v => v.name && /malay|bahasa melayu/i.test(v.name)) || null;
+  }
+
+  if ('speechSynthesis' in window) {
+    loadMalayVoice();
+    window.speechSynthesis.onvoiceschanged = loadMalayVoice;
+  }
+
+  function stopSpeech() {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
+  }
+
+  function speakText(text) {
+    if (!('speechSynthesis' in window)) return;
+    stopSpeech();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'ms-MY';
+    if (malayVoice) utterance.voice = malayVoice;
+    utterance.rate = 0.78;
+    utterance.pitch = 1.0;
+    utterance.volume = 0.9;
+    window.speechSynthesis.speak(utterance);
+  }
+
+  function speakInstruction() {
+    stopSpeech();
+    speakText("Kawal ikan anda. Makan ikan kecil mengikut jumlah yang diperlukan. Kemudian jawab soalan Bahasa Melayu dengan betul untuk naik ke tahap seterusnya!");
+  }
+
+  // Tetapan awal
+  applyLevelSettings(1);
+
+  gameLoop();
+</script>
+</body>
+</html>
